@@ -23,12 +23,19 @@ def get_qdrant_client(settings: Settings | None = None):
 
 
 @tool
-def retrieve_docs(query: str, top_k: int = 5) -> str:
-    """从财报文档库检索相关内容（向量检索）。
+def retrieve_docs(
+    query: str,
+    top_k: int = 5,
+    company: str | None = None,
+    fiscal_year: int | None = None,
+) -> str:
+    """从财报文档库检索相关内容（向量检索 + 可选 metadata 过滤）。
 
     参数：
         query: 检索查询文本
         top_k: 返回文档数（默认 5）
+        company: 公司名过滤（如 amazon，忽略大小写）
+        fiscal_year: 财年过滤（如 2023）
 
     返回格式化文档文本（含来源元数据）。向量库未就绪时返回提示。
     """
@@ -47,12 +54,27 @@ def retrieve_docs(query: str, top_k: int = 5) -> str:
             "请先摄取财报文档（/v1/ingest 或摄取脚本）。"
         )
 
+    # metadata 过滤（payload filter，§8.7.3）
+    from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+    conditions = []
+    if company:
+        conditions.append(
+            FieldCondition(key="company_name", match=MatchValue(value=company.lower()))
+        )
+    if fiscal_year is not None:
+        conditions.append(
+            FieldCondition(key="fiscal_year", match=MatchValue(value=fiscal_year))
+        )
+    query_filter = Filter(must=conditions) if conditions else None
+
     embeddings = get_embeddings(settings)
     vec = embeddings.embed_query(query)
     hits = client.query_points(
         collection_name=settings.qdrant_collection,
         query=vec,
         limit=top_k,
+        query_filter=query_filter,
     ).points
 
     if not hits:

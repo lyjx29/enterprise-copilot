@@ -40,9 +40,9 @@ dev = [
     "pytest-asyncio>=0.23",
     "httpx>=0.27",
 ]
-# 文档摄取（Docling 等）—— M4 引入，体积大，故单列为 extras
+# 文档摄取（M1 seed 用 pypdf；M4 正式管线加 Docling，体积大故单列）
 ingest = [
-    "docling>=2",
+    "pypdf>=4",
 ]
 
 [build-system]
