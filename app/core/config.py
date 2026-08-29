@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
+from typing import Annotated
 
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -62,7 +64,7 @@ class Settings(BaseSettings):
     grade_threshold: float = 0.6  # Self-RAG 门控阈值
 
     # ---- SQL 安全（纵深防御）----
-    sql_allowed_tables: list[str] = Field(
+    sql_allowed_tables: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "employees",
             "departments",
@@ -75,7 +77,9 @@ class Settings(BaseSettings):
     sql_max_rows: int = 100
 
     # ---- 安全 ----
-    api_keys: list[str] = Field(default_factory=list)  # env API_KEYS=["k1","k2"]
+    api_keys: Annotated[list[str], NoDecode] = Field(
+        default_factory=list
+    )  # env API_KEYS=["k1","k2"] 或逗号分隔
     rate_limit_per_minute: int = 60
 
     # ---- 观测（Langfuse 可选）----
@@ -87,6 +91,27 @@ class Settings(BaseSettings):
     # ---- 运行时 ----
     max_iterations: int = 3
     log_level: str = "INFO"
+
+    @field_validator("api_keys", "sql_allowed_tables", mode="before")
+    @classmethod
+    def _parse_list_field(cls, v):
+        """兼容多种 env 格式：空串 / JSON 数组 / 逗号分隔 / 已是 list。"""
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return []
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
 
 
 @lru_cache
