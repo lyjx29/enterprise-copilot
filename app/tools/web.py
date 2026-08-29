@@ -11,15 +11,15 @@ def web_search(query: str, max_results: int = 5) -> str:
     用于文档库/数据库无法回答的实时或外部信息问题。
     """
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
     except ImportError:
-        return "错误: 缺少 duckduckgo-search 依赖，请运行 uv sync"
+        return "错误: 缺少 ddgs 依赖，请运行 uv sync"
 
     try:
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=max_results))
     except Exception as exc:
-        return f"搜索失败: {exc}"
+        return f"搜索失败: {exc}（请检查网络/代理）"
 
     if not results:
         return "无搜索结果。"
