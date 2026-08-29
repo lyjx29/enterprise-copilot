@@ -27,6 +27,10 @@ dependencies = [
     "qdrant-client>=1.9",
     "rank-bm25>=0.2.2",
     "sqlglot>=25",
+    # Web 实时搜索（兜底路径）
+    "duckduckgo-search>=6",
+    # SQL 工具（员工库访问）
+    "sqlalchemy>=2.0",
 ]
 
 [project.optional-dependencies]
