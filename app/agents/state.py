@@ -3,6 +3,7 @@
 messages 用 operator.add reducer 实现追加式更新。
 其余字段为各分支节点的输出，供生成/落库/日志使用。
 """
+
 from __future__ import annotations
 
 import operator

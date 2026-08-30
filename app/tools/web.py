@@ -1,4 +1,5 @@
 """Web 搜索工具（DuckDuckGo，兜底路径，PROJECT_PLAN §8.4 / NG6）。"""
+
 from __future__ import annotations
 
 from langchain_core.tools import tool

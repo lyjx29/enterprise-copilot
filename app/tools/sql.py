@@ -5,6 +5,7 @@
 - validate_sql_query   sqlglot AST 校验 + 表白名单（L2/L3）
 - execute_sql_query    只读连接执行（L4，物理只读）+ 行数限制
 """
+
 from __future__ import annotations
 
 import re
@@ -19,6 +20,7 @@ from app.core.config import Settings, get_settings
 from app.core.llm import get_llm
 
 # ---- 数据库连接（纵深防御 L4：物理只读）----
+
 
 def _readonly_db_uri(settings: Settings) -> str:
     """构造只读 SQLite URI。SQLite 以 mode=ro 打开时物理无法写入。
@@ -50,6 +52,7 @@ def _get_schema(settings: Settings) -> str:
 
 
 # ---- 纵深防御校验（L2 语法解析 + L3 白名单）----
+
 
 def validate_sql(sql: str, allowed_tables: list[str]) -> str:
     """sqlglot AST 校验：顶层 SELECT、单语句、无危险 token、表名白名单。
@@ -84,6 +87,7 @@ def validate_sql(sql: str, allowed_tables: list[str]) -> str:
 
 
 # ---- 工具定义 ----
+
 
 @tool
 def get_database_schema() -> str:

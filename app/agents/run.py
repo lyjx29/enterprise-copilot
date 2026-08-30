@@ -2,6 +2,7 @@
 
 用于 M1 本地验证分层多 Agent 图（无需 API 服务）。
 """
+
 from __future__ import annotations
 
 import argparse

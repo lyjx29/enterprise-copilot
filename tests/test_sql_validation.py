@@ -2,6 +2,7 @@
 
 验证 sqlglot AST 校验能拦截各类绕过手段（大小写/注释/多语句/越权表等）。
 """
+
 from __future__ import annotations
 
 import pytest
@@ -22,14 +23,17 @@ def _rejected(sql: str) -> str:
 
 # ---- 合法 SELECT（应通过）----
 
+
 def test_plain_select():
     assert "SELECT COUNT(*)" in _ok("SELECT COUNT(*) FROM employees")
 
 
 def test_select_with_where_join():
-    _ok("SELECT d.dept_name, AVG(s.salary) FROM salaries s "
+    _ok(
+        "SELECT d.dept_name, AVG(s.salary) FROM salaries s "
         "JOIN dept_emp de ON s.emp_no = de.emp_no "
-        "JOIN departments d ON de.dept_no = d.dept_no GROUP BY d.dept_name")
+        "JOIN departments d ON de.dept_no = d.dept_no GROUP BY d.dept_name"
+    )
 
 
 def test_code_block_stripped():
@@ -42,6 +46,7 @@ def test_keywords_normalized():
 
 
 # ---- 危险/越权 SQL（应被拒绝）----
+
 
 def test_ddl_insert_rejected():
     _rejected("INSERT INTO employees VALUES (1, 'a')")

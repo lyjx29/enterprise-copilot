@@ -4,6 +4,7 @@ RouterQuery 同时承载两件事：
 1. Supervisor Router 的 datasource 判定（可评估、可 golden-set 对齐）
 2. 查询理解（metadata 过滤 / 查询改写 / 关键词 / HYDE）——RAG 分支消费
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -27,9 +28,7 @@ class RouterQuery(BaseModel):
     keywords: list[str] = Field(
         default_factory=list, description="3-5 个检索关键词（喂 BM25 稀疏路）"
     )
-    rewritten_query: str = Field(
-        default="", description="改写后的检索查询（澄清 + 去噪 + 补全）"
-    )
+    rewritten_query: str = Field(default="", description="改写后的检索查询（澄清 + 去噪 + 补全）")
     hyde_document: str | None = Field(
         default=None, description="HYDE 假设文档（可选，enable_hyde 时生成）"
     )

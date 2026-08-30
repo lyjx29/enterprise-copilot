@@ -6,6 +6,7 @@
 
 原则：全项目只经此工厂取模型，便于切换与测试。
 """
+
 from __future__ import annotations
 
 from langchain_core.embeddings import Embeddings

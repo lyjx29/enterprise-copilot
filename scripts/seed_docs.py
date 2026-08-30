@@ -6,6 +6,7 @@
 分块策略（M1 简化版）：按页分块（PageRAG）。M4 升级为层级语义分块（§8.7.2）。
 元数据：从文件名解析（amazon 10-k 2024.pdf / amazon 10-q q1 2024.pdf）。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -54,7 +55,9 @@ def main() -> None:
     client.recreate_collection(
         collection_name=settings.qdrant_collection,
         vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-        hnsw_config=HnswConfigDiff(m=settings.qdrant_hnsw_m, ef_construct=settings.qdrant_hnsw_ef_construct),
+        hnsw_config=HnswConfigDiff(
+            m=settings.qdrant_hnsw_m, ef_construct=settings.qdrant_hnsw_ef_construct
+        ),
     )
     print(f"collection '{settings.qdrant_collection}' 已重建 (dim={dim})")
 

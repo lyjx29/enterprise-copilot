@@ -7,6 +7,7 @@
 
 记忆：M1 用 MemorySaver（内存）；M2 换 SqliteSaver（thread_id 持久化）。
 """
+
 from __future__ import annotations
 
 import re
@@ -82,6 +83,7 @@ WEB_PROMPT = """你是 FinCopilot 的实时信息分析师。搜索并综合实�
 
 # ---- 工具 ----
 
+
 def _last_human_text(messages: list) -> str:
     for msg in reversed(messages):
         if isinstance(msg, HumanMessage):
@@ -89,7 +91,27 @@ def _last_human_text(messages: list) -> str:
     return ""
 
 
+def _format_history(messages: list, max_turns: int = 3) -> str:
+    """取最近几轮对话历史（Human/AI），供 router 与分支 agent 理解上下文。"""
+    turns = []
+    for msg in messages[-max_turns * 2 :]:
+        role = "用户" if isinstance(msg, HumanMessage) else "助手"
+        text = str(msg.content).strip()
+        if text:
+            turns.append(f"{role}: {text[:300]}")
+    return "\n".join(turns)
+
+
+def _contextual_question(state: AgentState, question: str) -> str:
+    """当前问题 + 历史上下文（不含当前问题本身）。"""
+    history = _format_history(state["messages"][:-1]) if state.get("messages") else ""
+    if not history:
+        return question
+    return f"历史对话:\n{history}\n\n当前问题: {question}"
+
+
 # ---- Sub-agent 构建（模块级缓存，避免重复构建）----
+
 
 @lru_cache(maxsize=1)
 def _build_rag_agent():
@@ -155,22 +177,21 @@ def _extract_sources(text: str) -> list[dict]:
 
 # ---- 节点 ----
 
+
 def supervisor_router_node(state: AgentState) -> dict:
-    """Supervisor Router：结构化输出 datasource + 查询理解。"""
+    """Supervisor Router：结构化输出 datasource + 查询理解（含历史上下文）。"""
     settings = get_settings()
     llm = get_llm(settings)
     structured = llm.with_structured_output(RouterQuery)
-    question = _last_human_text(state["messages"])
-    rq = structured.invoke(
-        [SystemMessage(content=ROUTER_PROMPT), HumanMessage(content=question)]
-    )
+    question = _contextual_question(state, _last_human_text(state["messages"]))
+    rq = structured.invoke([SystemMessage(content=ROUTER_PROMPT), HumanMessage(content=question)])
     return {"datasource": rq.datasource, "query_analysis": rq.model_dump()}
 
 
 def rag_node(state: AgentState) -> dict:
     """RAG 分支：Sub-agent 自主检索/改写/兜底。"""
     agent = _build_rag_agent()
-    question = _last_human_text(state["messages"])
+    question = _contextual_question(state, _last_human_text(state["messages"]))
     qa = RouterQuery(**state["query_analysis"])
     hint = ""
     if qa.company or qa.fiscal_year:
@@ -187,7 +208,7 @@ def rag_node(state: AgentState) -> dict:
 def sql_node(state: AgentState) -> dict:
     """SQL 分支：Sub-agent 生成/校验/执行。"""
     agent = _build_sql_agent()
-    question = _last_human_text(state["messages"])
+    question = _contextual_question(state, _last_human_text(state["messages"]))
     result = agent.invoke({"messages": [HumanMessage(content=question)]})
     answer = _final_answer(result)
     return {"messages": [AIMessage(content=answer)], "sql_result": answer}
@@ -196,7 +217,7 @@ def sql_node(state: AgentState) -> dict:
 def web_node(state: AgentState) -> dict:
     """Web 分支：Sub-agent 搜索/综合。"""
     agent = _build_web_agent()
-    question = _last_human_text(state["messages"])
+    question = _contextual_question(state, _last_human_text(state["messages"]))
     result = agent.invoke({"messages": [HumanMessage(content=question)]})
     answer = _final_answer(result)
     return {"messages": [AIMessage(content=answer)], "web_results": answer}
@@ -204,8 +225,12 @@ def web_node(state: AgentState) -> dict:
 
 # ---- 图组装 ----
 
-def build_graph():
-    """组装并编译分层多 Agent 图。"""
+
+def build_graph(checkpointer=None):
+    """组装并编译分层多 Agent 图。
+
+    checkpointer：M1 默认 MemorySaver（内存）；M2 起由调用方注入 SqliteSaver（thread_id 持久化）。
+    """
     builder = StateGraph(AgentState)
     builder.add_node("supervisor", supervisor_router_node)
     builder.add_node("rag", rag_node)
@@ -222,7 +247,9 @@ def build_graph():
     builder.add_edge("sql", END)
     builder.add_edge("web", END)
 
-    # M1 用内存记忆；M2 换 SqliteSaver（thread_id 持久化）
-    from langgraph.checkpoint.memory import MemorySaver
+    if checkpointer is None:
+        from langgraph.checkpoint.memory import MemorySaver
 
-    return builder.compile(checkpointer=MemorySaver())
+        checkpointer = MemorySaver()
+
+    return builder.compile(checkpointer=checkpointer)

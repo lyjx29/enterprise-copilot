@@ -6,6 +6,7 @@ M4 升级：双路召回（Qdrant dense + BM25 稀疏）→ RRF 融合 → cross
 设计要点：整条检索流水线封装成单工具，供 RAG Sub-agent 调用，
 避免 agent 在低层步骤里迷失（PROJECT_PLAN §8.3）。
 """
+
 from __future__ import annotations
 
 from langchain_core.tools import tool
@@ -63,9 +64,7 @@ def retrieve_docs(
             FieldCondition(key="company_name", match=MatchValue(value=company.lower()))
         )
     if fiscal_year is not None:
-        conditions.append(
-            FieldCondition(key="fiscal_year", match=MatchValue(value=fiscal_year))
-        )
+        conditions.append(FieldCondition(key="fiscal_year", match=MatchValue(value=fiscal_year)))
     query_filter = Filter(must=conditions) if conditions else None
 
     embeddings = get_embeddings(settings)
