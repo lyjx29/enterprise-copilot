@@ -37,6 +37,16 @@ services:
       timeout: 5s
       retries: 5
 
+  ui:
+    build:
+      context: ./ui
+    profiles: ["ui"]
+    ports:
+      - "8501:8501"
+    environment:
+      # 前端默认连 api 服务；浏览器访问用 localhost:8000 需自行调整
+      - API_URL=${UI_API_URL:-http://localhost:8000}
+
   langfuse:
     image: langfuse/langfuse:latest
     profiles: ["obs"]

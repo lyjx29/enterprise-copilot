@@ -48,6 +48,11 @@ dev = [
 obs = [
     "langfuse>=2",
 ]
+# 可选前端（Streamlit）：uv sync --extra ui
+ui = [
+    "streamlit>=1.36",
+    "requests>=2.31",
+]
 # M4 正式摄取管线引入 Docling（体积大，故单列）：uv sync --extra ingest
 
 [build-system]
