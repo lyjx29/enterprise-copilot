@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from langchain_core.messages import HumanMessage
 
 from app.core.config import get_settings
+from app.core.tracing import get_langfuse_handler
 from app.schemas.chat import ChatRequest, SSEEvent
 from app.services import thread_service
 
@@ -39,6 +40,10 @@ async def stream_chat(req: ChatRequest) -> AsyncIterator[SSEEvent]:
     graph = await get_graph()
     thread_id = req.thread_id or uuid.uuid4().hex
     config = {"configurable": {"thread_id": thread_id}}
+    # Langfuse tracing（可选）：开启时挂 callback
+    handler = get_langfuse_handler()
+    if handler is not None:
+        config["callbacks"] = [handler]
     state = {"messages": [HumanMessage(content=req.question)]}
 
     yield SSEEvent(

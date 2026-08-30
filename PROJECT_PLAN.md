@@ -24,7 +24,7 @@
 |---|---|---|
 | M0 项目骨架 | ✅ 完成 | `docker compose up` 双服务 healthy；`/v1/health`→ok；ruff+pytest 全绿 |
 | M1 核心多源 Agent 图 | ✅ 完成 | 路由三路判定✓、SQL 路真实跑通✓（300,024）、RAG 路真实跑通✓（Amazon 2023 revenue=$574.785B 带引用 p.38）、Web 路由✓（搜索墙内网络受限 OQ-7）；19 份财报已摄入 Qdrant（982 块）|
-| M2 FastAPI 服务化 | ⬜ 未开始 | 依赖 M1 |
+| M2 FastAPI 服务化 | ✅ 完成 | SSE 流式（meta→step→delta→sources→done）；两轮记忆✓（How about 2022→Amazon $513.983B）；消息落库；19 tests 绿 |
 | M3 企业层 | ⬜ 未开始 | 依赖 M2 |
 | M4 数据打磨 | ⬜ 未开始 | 依赖 M3 |
 | M5 测试与评估 | ⬜ 未开始 | 依赖 M4 |
