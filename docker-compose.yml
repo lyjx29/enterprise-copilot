@@ -10,8 +10,12 @@ services:
     env_file:
       - .env
     environment:
-      # 容器内访问 Qdrant 用服务名
+      # 容器内访问 Qdrant 用服务名；访问宿主 Ollama 用 host.docker.internal
       - QDRANT_URL=http://qdrant:6333
+      - LLM_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      # Docker Desktop / WSL2 下把 host.docker.internal 指向宿主
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data
       - ./debug_logs:/app/debug_logs
