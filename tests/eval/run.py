@@ -76,7 +76,9 @@ def run(filter_type: str | None = None, sample: int | None = None) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="FinCopilot 金标评估")
-    parser.add_argument("--filter", choices=["rag", "sql", "web", "followup"], default=None)
+    parser.add_argument(
+        "--filter", choices=["rag", "sql", "web", "followup", "edge", "mixed"], default=None
+    )
     parser.add_argument("--sample", type=int, default=None, help="只跑前 N 条（调试用）")
     args = parser.parse_args()
 
