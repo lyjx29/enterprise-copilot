@@ -2,7 +2,7 @@
 
 > 一个能自动判断"用户问题该查哪条路"的财务分析师智能体：**RAG 财报文档 / SQL 员工库 / Web 实时信息**三路自动路由，企业级工程化交付。
 
-![CI](https://img.shields.io/github/actions/workflow/status/your-org/enterprise-copilot/ci.yml)
+![CI](https://img.shields.io/github/actions/workflow/status/lyjx29/enterprise-copilot/ci.yml)
 
 ## 特性
 
