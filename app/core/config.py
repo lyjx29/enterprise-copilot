@@ -35,9 +35,10 @@ class Settings(BaseSettings):
     embedding_model: str = "nomic-embed-text"
     embedding_num_ctx: int = 8192
 
-    # ---- Reranker（cross-encoder，精排）——本地优先，可切云端 ----
+    # ---- Reranker（精排）—— 环境无 cross-encoder 模型，用 LLM-as-reranker ----
     rerank_provider: str = "ollama"
     rerank_model: str = "bge-reranker"
+    rerank_enabled: bool = True  # LLM-as-reranker：用生成模型对候选打分精排（耗 token 但零依赖）
 
     # ---- 分块（离线索引）----
     chunk_strategy: str = "semantic_page"  # semantic_page | plain_page | llm_page

@@ -92,6 +92,50 @@ class HybridRetriever:
                 scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank + 1)
         return sorted(scores.items(), key=lambda x: -x[1])
 
+    # ---- LLM-as-reranker（环境无 cross-encoder 模型的精排替代）----
+
+    def _llm_rerank(self, query: str, candidates: list[dict]) -> list[tuple[str, float]]:
+        """用生成模型对候选文档打分（0-10），按分数排序返回 [(doc_id, score)]。
+
+        失败时降级为原顺序（不阻断检索链路）。
+        """
+        from langchain_core.prompts import ChatPromptTemplate
+        from pydantic import BaseModel
+
+        from app.core.llm import get_llm
+
+        class RerankScore(BaseModel):
+            index: int
+            score: float
+
+        class RerankResult(BaseModel):
+            scores: list[RerankScore]
+
+        docs_text = "\n\n".join(f"[{i}] {doc['content'][:400]}" for i, doc in enumerate(candidates))
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "你是检索相关性评分器。根据查询判断每个候选文档的相关性，每项打分 0-10（10=完全相关）。"
+                    "只输出 JSON，scores 为数组，每项含 index 和 score。",
+                ),
+                ("human", "查询: {query}\n\n候选文档:\n{docs}"),
+            ]
+        )
+        llm = get_llm(self.settings)
+        try:
+            result = (prompt | llm.with_structured_output(RerankResult)).invoke(
+                {"query": query, "docs": docs_text}
+            )
+            score_map = {s.index: s.score for s in result.scores}
+            ranked_idx = sorted(
+                range(len(candidates)), key=lambda i: score_map.get(i, 0), reverse=True
+            )
+            return [(candidates[i]["id"], score_map.get(i, 0.0)) for i in ranked_idx]
+        except Exception:
+            # 降级：按候选原顺序（RRF 序）
+            return [(d["id"], 0.0) for d in candidates]
+
     # ---- 主入口 ----
 
     def retrieve(
@@ -101,7 +145,7 @@ class HybridRetriever:
         fiscal_year: int | None = None,
         top_k: int = 5,
     ) -> str:
-        """混合检索：双路召回 → RRF 融合 → 返回格式化文档文本。"""
+        """混合检索：双路召回 → RRF 融合 →（可选 LLM 精排）→ 返回格式化文档文本。"""
         s = self.settings
         filters: dict = {}
         if company:
@@ -113,11 +157,18 @@ class HybridRetriever:
         sparse = self._sparse_recall(query, filters, s.recall_top_n2)
         fused = self._rrf([dense, sparse])[: s.fuse_top_n]
 
-        # 阶段一：无 cross-encoder（环境受限），直接用 RRF 排序取 top_k
-        selected = fused[:top_k]
         doc_map = {d["id"]: d for d in (self._corpus or [])}
+        selected: list[tuple[str, float]] = fused[:top_k]
+
+        # LLM-as-reranker 精排（默认开启）
+        if s.rerank_enabled:
+            candidates = [doc_map[doc_id] for doc_id, _ in fused if doc_id in doc_map]
+            if candidates:
+                ranked = self._llm_rerank(query, candidates)
+                selected = ranked[:top_k]
+
         lines = []
-        for doc_id, _score in selected:
+        for doc_id, score in selected:
             doc = doc_map.get(doc_id)
             if doc is None:
                 continue
@@ -130,7 +181,7 @@ class HybridRetriever:
                 "page": payload.get("page", "?"),
             }
             lines.append(
-                f"[score={round(_score, 3)} | {meta['company']} {meta['doc_type']} "
+                f"[score={round(score, 3)} | {meta['company']} {meta['doc_type']} "
                 f"{meta['year']} {meta['quarter']} p.{meta['page']}]\n{doc['content'][:600]}"
             )
         return "\n\n---\n\n".join(lines) if lines else "未检索到相关文档。"
