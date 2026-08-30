@@ -9,12 +9,15 @@ import time
 import uuid
 from collections.abc import AsyncIterator
 
+import structlog
 from langchain_core.messages import HumanMessage
 
 from app.core.config import get_settings
 from app.core.tracing import get_langfuse_handler
 from app.schemas.chat import ChatRequest, SSEEvent
 from app.services import thread_service
+
+logger = structlog.get_logger(__name__)
 
 _graph_instance = None
 
@@ -81,7 +84,8 @@ async def stream_chat(req: ChatRequest) -> AsyncIterator[SSEEvent]:
                             event="step",
                             data={"type": "done_branch", "detail": node, "sources": sources},
                         )
-    except Exception:
+    except Exception as exc:
+        logger.exception("chat_stream_error", error=str(exc), thread_id=thread_id)
         yield SSEEvent(event="error", data={"message": "内部错误", "code": "INTERNAL"})
         # 仍返回已产出的部分（不抛给客户端）
         return

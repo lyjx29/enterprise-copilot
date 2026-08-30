@@ -46,6 +46,23 @@ curl http://localhost:8000/v1/health
 
 API 文档：http://localhost:8000/docs
 
+## 准备数据（可选但推荐，让 RAG / SQL 路可用）
+
+> 服务起来后默认是空库。要答对财报/员工问题，需准备数据：
+
+```bash
+# 财报文档摄入（RAG 路）。PDF 文件名需含元数据，如 "amazon 10-k 2023.pdf"
+uv sync
+python -m scripts.seed_docs --data-dir <你的财报PDF目录>
+
+# 员工数据库（SQL 路）。外部数据资产（课程 employees_db，见 PROJECT_PLAN §21）
+mkdir -p data
+cp <employees.db路径> data/employees.db
+
+# 也可通过 API 摄入单份 PDF：
+curl -X POST http://localhost:8000/v1/ingest -F "file=@amazon 10-k 2023.pdf"
+```
+
 ## 示例对话
 
 ```bash
