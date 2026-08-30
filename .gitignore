@@ -37,3 +37,7 @@ langfuse/
 
 # 外部工具/方法论 skill 目录（带嵌套 .git，不纳入版本控制）
 skills/
+
+# 个人学习指南（本地文档，不推远程）
+docs/PROJECT_GUIDE.md
+docs/DOCKER_DEPLOY_GUIDE.md
