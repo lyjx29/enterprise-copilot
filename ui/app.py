@@ -4,6 +4,7 @@
     streamlit run ui/app.py
 或 docker compose --profile ui up
 """
+
 from __future__ import annotations
 
 import json
