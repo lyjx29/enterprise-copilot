@@ -12,7 +12,7 @@ from __future__ import annotations
 from langchain_core.tools import tool
 
 from app.core.config import Settings, get_settings
-from app.core.llm import get_embeddings, get_llm
+from app.core.llm import get_llm
 
 
 def get_qdrant_client(settings: Settings | None = None):
@@ -30,7 +30,7 @@ def retrieve_docs(
     company: str | None = None,
     fiscal_year: int | None = None,
 ) -> str:
-    """从财报文档库检索相关内容（向量检索 + 可选 metadata 过滤）。
+    """从财报文档库检索相关内容（企业级混合检索：双路召回 + RRF 融合）。
 
     参数：
         query: 检索查询文本
@@ -55,47 +55,10 @@ def retrieve_docs(
             "请先摄取财报文档（/v1/ingest 或摄取脚本）。"
         )
 
-    # metadata 过滤（payload filter，§8.7.3）
-    from qdrant_client.models import FieldCondition, Filter, MatchValue
+    from app.tools.retriever import HybridRetriever
 
-    conditions = []
-    if company:
-        conditions.append(
-            FieldCondition(key="company_name", match=MatchValue(value=company.lower()))
-        )
-    if fiscal_year is not None:
-        conditions.append(FieldCondition(key="fiscal_year", match=MatchValue(value=fiscal_year)))
-    query_filter = Filter(must=conditions) if conditions else None
-
-    embeddings = get_embeddings(settings)
-    vec = embeddings.embed_query(query)
-    hits = client.query_points(
-        collection_name=settings.qdrant_collection,
-        query=vec,
-        limit=top_k,
-        query_filter=query_filter,
-    ).points
-
-    if not hits:
-        return "未检索到相关文档。"
-
-    lines = []
-    for hit in hits:
-        payload = hit.payload or {}
-        meta = {
-            "company": payload.get("company_name", "?"),
-            "doc_type": payload.get("doc_type", "?"),
-            "year": payload.get("fiscal_year", "?"),
-            "quarter": payload.get("fiscal_quarter", "?"),
-            "page": payload.get("page", "?"),
-        }
-        score = round(hit.score, 3) if hit.score is not None else "?"
-        content = str(payload.get("content") or hit.payload or "")
-        lines.append(
-            f"[score={score} | {meta['company']} {meta['doc_type']} "
-            f"{meta['year']} {meta['quarter']} p.{meta['page']}]\n{content[:600]}"
-        )
-    return "\n\n---\n\n".join(lines)
+    retriever = HybridRetriever(settings)
+    return retriever.retrieve(query, company=company, fiscal_year=fiscal_year, top_k=top_k)
 
 
 @tool
