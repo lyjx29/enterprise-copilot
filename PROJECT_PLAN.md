@@ -30,8 +30,14 @@
 | M5 测试与评估 | ✅ 完成 | 金标集 12 条；自写评分器（faithfulness/relevancy）；评估脚本（rag-1 f=3/r=5, sql-1 f=5/r=5）；26 tests 绿 |
 | M6 发布 | ✅ 完成 | CI（ruff+pytest）；README 架构 mermaid；Streamlit 前端（来源面板）；DEMO 演示脚本；docker compose ui profile；**tag v1.0.0 待发布确认** |
 
-**当前进行中**：无（M0-M6 全部完成，待 v1.0.0 发布）。
+**当前进行中**：V2 检索增强（LLM-as-reranker 已完成并实证）。
 **已完成的决策**：见 §4（ADR-1~13）。**未决问题**：见 §19（OQ-2 / OQ-4 / OQ-6 / OQ-7 待决）。
+
+**V2.0 记录**（2026-08-31）：检索增强 + 大规模评测。
+- V2-M1a：LLM-as-reranker 精排（环境无 cross-encoder，用生成模型打分，零依赖）
+- V2-M2：金标扩到 50 条（真实数据验证，修正最高薪部门=Sales）
+- V2-M3/M4：评测矩阵框架 + 系统化报告（`docs/EVAL_REPORT.md`）
+- **实证结论**：rerank 开 → faithfulness **4.67** vs 关 → **4.00**（12 条 rag 金标）；低分案例从 4 个降到 1 个
 
 ---
 
