@@ -27,10 +27,10 @@
 | M2 FastAPI 服务化 | ✅ 完成 | SSE 流式（meta→step→delta→sources→done）；两轮记忆✓（How about 2022→Amazon $513.983B）；消息落库；19 tests 绿 |
 | M3 企业层 | ✅ 完成 | 鉴权（无 key→401✓ 带 key→200✓）限流（429✓）structlog JSON 日志✓ Langfuse 可选 tracing✓ /health/ready 依赖检查✓ docker compose 重建✓ 26 tests 绿 |
 | M4 数据打磨 | ✅ 完成 | 混合检索（双路召回+RRF）✓ p.38 命中 top-2；/v1/ingest（去重✓）；RAG 金标带引用✓；cross-encoder 精排因环境无 reranker 跳过（OQ-6）；Web 网络受限（OQ-7）|
-| M5 测试与评估 | ⬜ 未开始 | 依赖 M4 |
-| M6 发布 | ⬜ 未开始 | 依赖 M5 |
+| M5 测试与评估 | ✅ 完成 | 金标集 12 条；自写评分器（faithfulness/relevancy）；评估脚本（rag-1 f=3/r=5, sql-1 f=5/r=5）；26 tests 绿 |
+| M6 发布 | ✅ 完成 | CI（ruff+pytest）；README 架构 mermaid；Streamlit 前端（来源面板）；DEMO 演示脚本；docker compose ui profile；**tag v1.0.0 待发布确认** |
 
-**当前进行中**：M5 测试与评估（金标集 + 自写评分器）。
+**当前进行中**：无（M0-M6 全部完成，待 v1.0.0 发布）。
 **已完成的决策**：见 §4（ADR-1~13）。**未决问题**：见 §19（OQ-2 / OQ-4 / OQ-6 / OQ-7 待决）。
 
 ---
