@@ -48,8 +48,8 @@ services:
     ports:
       - "8501:8501"
     environment:
-      # 前端默认连 api 服务；浏览器访问用 localhost:8000 需自行调整
-      - API_URL=${UI_API_URL:-http://localhost:8000}
+      # 容器内访问 api 用 docker 服务名 api:8000
+      - API_URL=${UI_API_URL:-http://api:8000}
 
   langfuse:
     image: langfuse/langfuse:latest

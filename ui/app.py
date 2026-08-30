@@ -8,13 +8,16 @@
 from __future__ import annotations
 
 import json
+import os
 
 import requests
 import streamlit as st
 
 st.set_page_config(page_title="FinCopilot", page_icon="📊", layout="wide")
 
-API_URL = st.sidebar.text_input("API URL", "http://localhost:8000")
+# 容器内默认走 docker 服务名 api:8000；本地跑 streamlit 时用 localhost
+DEFAULT_API = os.environ.get("API_URL", "http://localhost:8000")
+API_URL = st.sidebar.text_input("API URL", DEFAULT_API)
 API_KEY = st.sidebar.text_input("API Key", type="password")
 st.sidebar.caption("留空 = 本地开发（未开启鉴权）")
 
