@@ -1,0 +1,83 @@
+{
+  "description": "FinCopilot 金标评估集（M5）。每类 3-5 条，共 12 条。expected_points 用于自动判分。",
+  "questions": [
+    {
+      "id": "rag-1",
+      "type": "rag",
+      "question": "What was Amazon's revenue in 2023?",
+      "expected_points": ["574.785", "total net sales"],
+      "expected_source": "amazon 10-k 2023"
+    },
+    {
+      "id": "rag-2",
+      "type": "rag",
+      "question": "What was Amazon's operating income in 2023?",
+      "expected_points": ["36.852", "operating income"],
+      "expected_source": "amazon 10-k 2023"
+    },
+    {
+      "id": "rag-3",
+      "type": "rag",
+      "question": "What was Apple's total net sales in 2023?",
+      "expected_points": ["383", "net sales"],
+      "expected_source": "apple 10-k 2023"
+    },
+    {
+      "id": "rag-4",
+      "type": "rag",
+      "question": "What was Google's revenue in 2023?",
+      "expected_points": ["307", "revenues"],
+      "expected_source": "google 10-k 2023"
+    },
+    {
+      "id": "sql-1",
+      "type": "sql",
+      "question": "How many employees are there?",
+      "expected_points": ["300024"]
+    },
+    {
+      "id": "sql-2",
+      "type": "sql",
+      "question": "What is the average salary across all employees?",
+      "expected_points": ["63810"]
+    },
+    {
+      "id": "sql-3",
+      "type": "sql",
+      "question": "Which department has the highest average salary?",
+      "expected_points": ["Finance"]
+    },
+    {
+      "id": "sql-4",
+      "type": "sql",
+      "question": "How many departments are there?",
+      "expected_points": ["9"]
+    },
+    {
+      "id": "web-1",
+      "type": "web",
+      "question": "What is the latest news about OpenAI?",
+      "expected_points": []
+    },
+    {
+      "id": "web-2",
+      "type": "web",
+      "question": "What are the current price of Bitcoin?",
+      "expected_points": []
+    },
+    {
+      "id": "followup-1",
+      "type": "followup",
+      "question": "How about 2022?",
+      "context": "What was Amazon's revenue in 2023?",
+      "expected_points": ["513.983"]
+    },
+    {
+      "id": "followup-2",
+      "type": "followup",
+      "question": "And what is the average salary?",
+      "context": "How many employees are there?",
+      "expected_points": ["63810"]
+    }
+  ]
+}
